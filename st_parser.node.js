@@ -15,15 +15,8 @@ class StParse{
         }
     }
     installPackages() {
-        // let packages = [' '],
-        //     parser = this;
-        // for (let package of packages) {
-        //     parser.executive();
-        // }
     }
     hasInstalled() {
-        // let rootPath = stFileSystem.unionPath(PATH_ROOT, 'node_modules');
-        // return stFileSystem.exists(rootPath);
         return true;
     }
     createMonitors() {
@@ -46,6 +39,8 @@ class StParse{
                 } else if (parser.isLessResource(filename) == '1') {
                     newFile = filename.replace(/.c.less(6*)$/, '.css');
                     cmd = `lessc -x --source-map --clean-css="--advanced" ${filename} ${newFile}`;
+                } else if (parser.isLessPart(filename) == '1') {
+                    parser.getExports(filename);
                 }
                 if (cmd) {
                     parser.executive(cmd);
@@ -77,11 +72,46 @@ class StParse{
             callback();
         }
     }
+    getExports(file) {
+        let strings = stFileSystem.readFileSync(file, {encoding: stFileSystem.encoding});
+        strings = strings.replace(/[\r\n\t\s]+/g, '');
+        let matchers = strings.match(/\/*exports=\[([^\]]*)\]/),
+            parser = this,
+            pathInfo = stFileSystem.getPathInfo(file),
+            dir = pathInfo.directory;
+     
+        if (matchers) {
+            let filesString = matchers[1],
+                files = filesString.split(","),
+                len = files.length;
+            for (let i = 0; i < len; i ++) {
+                let filename = files[i],
+                matcher = filename.match(/^\s*\'?([^\']*)\'?\s*$/);
+                if (matcher) {
+                    filename = matcher[1];
+                    if (filename.indexOf('/') != 0) {
+                        filename = stFileSystem.unionPath(dir, filename);
+                    }
+                } else {                    
+                    console.log(filename);
+                }
+                console.log(filename);
+                if (parser.isLessResource(filename) == '1') {
+                    let newFile = filename.replace(/.c.less(6*)$/, '.css'),
+                        cmd = `lessc -x --source-map --clean-css="--advanced" ${filename} ${newFile}`;
+                    parser.executive(cmd);
+                }
+            }
+        }
+    }
     isES6Resource(file) {
         return this.isResourceOf(file, /\.c.es(6?)$/);
     }
     isLessResource(file) {
         return this.isResourceOf(file, /\.c.less$/);
+    }
+    isLessPart(file) {
+        return this.isResourceOf(file, /\.less$/);
     }
     isResourceOf(file, reg) {
         let yesItIs = -1;

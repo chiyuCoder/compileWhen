@@ -4,9 +4,9 @@ let { stdin, exit } = require('process'),
 
 
 stdin.setEncoding('utf-8');
-
 stdin.on('readable', () => {
     let chunk = stdin.read();
+    stEcho.info('==*=*==');
     if (chunk != null) {
         chunk = chunk.replace(/\r?\n$/, '');
         stEcho.info(chunk);

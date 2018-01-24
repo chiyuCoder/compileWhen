@@ -1,12 +1,25 @@
 let fileSystem = require('fs'),
     { stEcho } = require('./st_devtool.node'),
+    { exit } = require('process'),
     stFileSystemOrigin = {
         encoding: 'utf8',
         unionPath: (parentDir, childDir) => {
+            if (childDir.match(/^\s*\//)) {
+                return childDir;
+            }
             if (!parentDir) {
                 parentDir = '';
             } else {
                 parentDir = parentDir.replace(/\/$/, '') + "/";
+            }
+            childDir = childDir.trim();
+            let matcher = childDir.match(/^(\.{1,2})\/(.+)$/);
+            if (matcher) {
+                let dirLevel = matcher[1];
+                childDir = matcher[2];
+                if (dirLevel == '..') {
+                    parentDir = parentDir.replace(/([^\/]*)\/$/, '');
+                }
             }
             return parentDir + childDir;
         },
@@ -48,6 +61,8 @@ let fileSystem = require('fs'),
                 pathInfo.extention = matcher[2] ? matcher[2] : '';
                 let fileNameRE = new RegExp(matcher[0] + '$');
                 pathInfo.directory = pathString.replace(fileNameRE, '');
+            } else {
+                pathInfo.directory = pathString;
             }
             return pathInfo;
         },
