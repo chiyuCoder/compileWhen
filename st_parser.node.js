@@ -2,7 +2,9 @@ const PATH_ROOT = __dirname.replace(/\/resource(\/?)$/, '');
 
 let { stEcho } = require('./st_devtool.node'),
     { stFileSystem } = require('./st_filesystem.node'),
-    node_command = require('child_process');
+    node_command = require('child_process'),
+    {es6Parser} = require("./st_parseEs6.node");
+    // {lessParser} = require("./st_parseLess.node");
 
 class StParse{
     constructor(url) {
@@ -24,29 +26,43 @@ class StParse{
             parser = this;
         stEcho.info(pathString);
         console.log('开启文件监视器==>');
-        this.monitors = stFileSystem.monitoring(pathString, (event, filename) => {
-            stEcho.info(`${filename} on ${event}`);
+        this.monitors = stFileSystem.monitoring(pathString, (event, filename) => {           
             if (event == 'rename') {
                 parser.stopAllMonitors(function () {
                     parser.createMonitors();
                 });
             } else {
-                let newFile = '',
-                    cmd = '';
-                if (parser.isES6Resource(filename) == '1') {
-                    newFile = filename.replace(/.c.es(6*)$/, '.js');
-                    cmd = `npx babel ${filename} --out-file ${newFile} --source-maps`;
-                } else if (parser.isLessResource(filename) == '1') {
-                    newFile = filename.replace(/.c.less(6*)$/, '.css');
-                    cmd = `lessc -x --source-map --clean-css="--advanced" ${filename} ${newFile}`;
-                } else if (parser.isLessPart(filename) == '1') {
-                    parser.getExports(filename);
-                }
-                if (cmd) {
-                    parser.executive(cmd);
-                }
+                parser.parseFile(filename);               
             }
         });
+    }
+    parseFile(filename) {
+        let newFile = '',
+            cmd = '',
+            parser = this,
+            event = "change";
+        if (parser.isES6Resource(filename) == '1') {
+            stEcho.info(`${filename} on ${event}`);
+            // newFile = filename.replace(/(\.c)?\.es(6*)$/, '.js');
+            // cmd = `npx babel ${filename} --out-file ${newFile} --source-maps`;
+            es6Parser.toJs(filename);
+        } else if (parser.isLessResource(filename) == '1') {
+            stEcho.info(`${filename} on ${event}`);
+            newFile = filename.replace(/.c.less(6*)$/, '.css');
+            cmd = `lessc -x --source-map --clean-css="--advanced" ${filename} ${newFile}`;
+            // lessParser.toCss(filename);
+        } else if (parser.isLessPart(filename) == '1') {
+            // if (!filename.match(/\.\.less$/)) {
+                // lessParser.compileAllLess();
+            // }
+            // parser.getExports(filename);
+        } else if (parser.isTSResource(filename) == '1') {
+            newFile = filename.replace(/\.ts$/, '.js');
+            // cmd = `tsc ${filename}`;
+        }
+        if (cmd) {
+            parser.executive(cmd);
+        }
     }
     executive(cmd) {
         stEcho.info('准备执行');
@@ -92,20 +108,21 @@ class StParse{
                     if (filename.indexOf('/') != 0) {
                         filename = stFileSystem.unionPath(dir, filename);
                     }
-                } else {                    
-                    console.log(filename);
-                }
+                } 
                 console.log(filename);
                 if (parser.isLessResource(filename) == '1') {
                     let newFile = filename.replace(/.c.less(6*)$/, '.css'),
-                        cmd = `lessc -x --source-map --clean-css="--advanced" ${filename} ${newFile}`;
+                        cmd = `lessc --source-map --clean-css="--advanced" ${filename} ${newFile}`;
                     parser.executive(cmd);
                 }
             }
         }
     }
     isES6Resource(file) {
-        return this.isResourceOf(file, /\.c.es(6?)$/);
+        return this.isResourceOf(file, /\.es(6?)$/);
+    }
+    isTSResource(file) {
+        return this.isResourceOf(file, /\.ts$/);
     }
     isLessResource(file) {
         return this.isResourceOf(file, /\.c.less$/);

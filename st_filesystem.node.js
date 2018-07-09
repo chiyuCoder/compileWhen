@@ -28,7 +28,15 @@ let fileSystem = require('fs'),
                 let state = fileSystem.lstatSync(dir);
                 return state;
             } else {
-                return {};
+                // throw Error(`${dir} not exist`);
+                return {
+                    isDirectory(){
+                        return false;
+                    },
+                    isFile() {
+                        return false;
+                    }
+                }
             }
         },
         exists: (dir) => {

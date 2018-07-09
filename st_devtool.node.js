@@ -79,7 +79,7 @@ class StEcho extends StCli {
 		}
 		fontColor = this.getColorValue(fontColor);
 		backgroundColor = this.getColorValue(backgroundColor, 'backgroundColors');
-		color = `\x1b[${backgroundColor};${fontColor}m${type}\x1b[${this.backgroundColors.default};${this.fontColors.default}m`;
+		color = `\u001B[${backgroundColor};${fontColor}m${type}\u001B[${this.backgroundColors.default};${this.fontColors.default}m`;
 		console.log(color, str);
 	}
 	error(str, newLine = "=======>") {
@@ -89,7 +89,11 @@ class StEcho extends StCli {
 	info(str, newLine = "=======>"){
 		this.log(str, 'yellow', 'black');
 		this.log(newLine);
-	} 
+	}
+	success(str, newLine = "-----------------------") {
+		this.log(str, "darkgreen");
+		this.log(newLine);
+	}
 }
 
 
