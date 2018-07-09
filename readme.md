@@ -1,6 +1,5 @@
-#  用来编绎没有使用工程化的前端代码
-##  使用步骤
-    1. 运行   `node st_parse.node.js`
-    2. 将要监视的文件夹填写进去
+## 入口文件
+    StParseAll.node.ts --- 解析某些目录下的所有源代码
+    StEcho.node.ts, 与 StCli.node.ts 用于彩色化命令行输出
+    StFileSystem.node.ts 增加遍历的功能之类的文件操作
 
-   需要babel-cli,babel-preset-env, babel-preset-stage-0, less等, 如果不需要,可以在st_parser.node.js中修改他的编绎命令即可
